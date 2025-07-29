@@ -1,0 +1,27 @@
+name: ecommerce_app
+description: A simple Flutter e‑commerce demo with navigation and routing.
+publish_to: none            # Prevents accidental publishing to pub.dev
+
+version: 1.0.0+1            # major.minor.patch+build
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"     # Works with current stable Flutter (3.22.x)
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8    # iOS‑style icons
+  uuid: ^4.3.3               # Generates unique IDs for products
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1      # Recommended lint rules
+
+flutter:
+  uses-material-design: true
+
+  # If you later add images, list them here, e.g.:
+  # assets:
+  #   - assets/images/
