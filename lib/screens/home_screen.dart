@@ -2,29 +2,65 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/product.dart';
+import '../domain/entities/product.dart';
+import '../domain/usecases/view_all_products.dart';
+import '../domain/usecases/view_product.dart';
+import '../domain/usecases/create_product.dart';
+import '../domain/usecases/update_product.dart';
+import '../domain/usecases/delete_product.dart';
 import 'product_detail_screen.dart';
 import 'product_form_screen.dart';
 import 'search_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  final List<Product> products;
-  // Functions are now required properties of the HomeScreen widget
-  final void Function(Product) onSave;
-  final void Function(String) onDelete;
+class HomeScreen extends StatefulWidget {
+  final ViewAllProductsUseCase viewAllProductsUseCase;
+  final ViewProductUseCase viewProductUseCase;
+  final CreateProductUseCase createProductUseCase;
+  final UpdateProductUseCase updateProductUseCase;
+  final DeleteProductUseCase deleteProductUseCase;
 
   const HomeScreen({
     super.key,
-    required this.products,
-    required this.onSave,
-    required this.onDelete,
+    required this.viewAllProductsUseCase,
+    required this.viewProductUseCase,
+    required this.createProductUseCase,
+    required this.updateProductUseCase,
+    required this.deleteProductUseCase,
   });
 
   @override
-  Widget build(BuildContext context) {
-    // We no longer need to get functions from ModalRoute here
-    // as they are passed directly via the constructor.
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
+class _HomeScreenState extends State<HomeScreen> {
+  late Future<List<Product>> _productsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProducts();
+  }
+
+  void _fetchProducts() {
+    setState(() {
+      _productsFuture = widget.viewAllProductsUseCase.call();
+    });
+  }
+
+  // This function handles navigation and refreshes the list upon return.
+  void _navigateAndRefresh(BuildContext context, Widget screen) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
+
+    if (result == true) {
+      _fetchProducts();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -32,41 +68,62 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _CustomAppBar(),
+              _CustomAppBar(
+                  onSearchTap: () => _navigateAndRefresh(
+                      context,
+                      SearchScreen(
+                          viewAllProductsUseCase:
+                              widget.viewAllProductsUseCase))),
               const SizedBox(height: 24),
-              const Text(
-                'Available Products',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
+              const Text('Available Products',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               Expanded(
-                child: products.isEmpty
-                    ? const Center(child: Text('No products yet!'))
-                    : ListView.builder(
-                        itemCount: products.length,
-                        itemBuilder: (ctx, i) {
-                          final product = products[i];
-                          // Pass the onDelete function down to the product card
-                          return _ProductCard(
-                              product: product, onDelete: onDelete);
-                        },
-                      ),
+                child: FutureBuilder<List<Product>>(
+                  future: _productsFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(child: Text('No products yet!'));
+                    }
+
+                    final products = snapshot.data!;
+                    return ListView.builder(
+                      itemCount: products.length,
+                      itemBuilder: (ctx, i) {
+                        final product = products[i];
+                        return _ProductCard(
+                          product: product,
+                          onTap: () => _navigateAndRefresh(
+                            context,
+                            ProductDetailScreen(
+                              product: product,
+                              updateProductUseCase: widget.updateProductUseCase,
+                              deleteProductUseCase: widget.deleteProductUseCase,
+                              createProductUseCase: widget.createProductUseCase,
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Now we pass the onSave function from the widget's properties
-          Navigator.pushNamed(
-            context,
-            ProductFormScreen.routeName,
-            arguments: {
-              'onSave': onSave,
-            },
-          );
-        },
+        onPressed: () => _navigateAndRefresh(
+          context,
+          ProductFormScreen(
+            createProductUseCase: widget.createProductUseCase,
+            updateProductUseCase: widget.updateProductUseCase,
+          ),
+        ),
         backgroundColor: Colors.indigo,
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -74,8 +131,11 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+// --- UI Widgets remain the same ---
+
 class _CustomAppBar extends StatelessWidget {
-  const _CustomAppBar();
+  final VoidCallback onSearchTap;
+  const _CustomAppBar({required this.onSearchTap});
 
   @override
   Widget build(BuildContext context) {
@@ -87,37 +147,28 @@ class _CustomAppBar extends StatelessWidget {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(12),
-            ),
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(12)),
           ),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                DateFormat('MMMM d, yyyy').format(DateTime.now()),
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-              ),
-              const Text(
-                'Hello, Yohannes',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              Text(DateFormat('MMMM d, yyyy').format(DateTime.now()),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+              const Text('Hello, Yohannes',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
           const Spacer(),
           IconButton(
-            onPressed: () {
-              Navigator.pushNamed(context, SearchScreen.routeName);
-            },
+            onPressed: onSearchTap,
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: const Icon(Icons.notifications_none_outlined,
-                  color: Colors.black),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.grey[300]!)),
+              child: const Icon(Icons.search, color: Colors.black),
             ),
           ),
         ],
@@ -128,31 +179,19 @@ class _CustomAppBar extends StatelessWidget {
 
 class _ProductCard extends StatelessWidget {
   final Product product;
-  // The card now accepts the onDelete function directly
-  final void Function(String) onDelete;
+  final VoidCallback onTap;
 
-  const _ProductCard({required this.product, required this.onDelete});
+  const _ProductCard({required this.product, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    // No longer need to get onDelete from ModalRoute here.
-
     return GestureDetector(
-      onTap: () {
-        // Pass the function from this widget's properties.
-        Navigator.pushNamed(
-          context,
-          ProductDetailScreen.routeName,
-          arguments: {
-            'product': product,
-            'onDelete': onDelete,
-          },
-        );
-      },
+      onTap: onTap,
       child: Card(
+        color: Colors.white,
         elevation: 0,
         margin: const EdgeInsets.only(bottom: 20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -160,44 +199,30 @@ class _ProductCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  product.imageUrl,
-                  height: 150,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+                child: Image.network(product.imageUrl,
+                    height: 150, width: double.infinity, fit: BoxFit.cover),
               ),
               const SizedBox(height: 12),
-              Text(
-                product.name,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              Text(product.name,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    product.category,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                  Text(
-                    '\$${product.price.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  Text("Men's shoe",
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                  Text('\$${product.price.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold)),
                 ],
               ),
-              Row(
-                children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 20),
-                  const SizedBox(width: 4),
-                  Text(
-                    '(${product.rating.toString()})',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                ],
-              )
+              Row(children: [
+                const Icon(Icons.star, color: Colors.amber, size: 20),
+                const SizedBox(width: 4),
+                Text('(4.0)',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+              ])
             ],
           ),
         ),

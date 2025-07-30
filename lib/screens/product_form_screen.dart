@@ -1,19 +1,19 @@
 // lib/screens/product_form_screen.dart
 
 import 'package:flutter/material.dart';
-import '../models/product.dart';
+import '../domain/entities/product.dart';
+import '../domain/usecases/create_product.dart';
+import '../domain/usecases/update_product.dart';
 
 class ProductFormScreen extends StatefulWidget {
-  static const routeName = '/add-edit-product';
-
-  final void Function(Product product) onSave;
-  final void Function(String id)? onDelete;
+  final CreateProductUseCase createProductUseCase;
+  final UpdateProductUseCase updateProductUseCase;
   final Product? existingProduct;
 
   const ProductFormScreen({
     super.key,
-    required this.onSave,
-    this.onDelete,
+    required this.createProductUseCase,
+    required this.updateProductUseCase,
     this.existingProduct,
   });
 
@@ -27,6 +27,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   late TextEditingController _categoryController;
   late TextEditingController _priceController;
   late TextEditingController _descriptionController;
+  bool get _isEditing => widget.existingProduct != null;
 
   @override
   void initState() {
@@ -34,7 +35,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _nameController =
         TextEditingController(text: widget.existingProduct?.name ?? '');
     _categoryController =
-        TextEditingController(text: widget.existingProduct?.category ?? '');
+        TextEditingController(text: "Men's shoe"); // Default value
     _priceController = TextEditingController(
         text: widget.existingProduct?.price.toStringAsFixed(0) ?? '');
     _descriptionController =
@@ -50,40 +51,31 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     super.dispose();
   }
 
-  void _saveForm() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _saveForm() async {
+    if (_formKey.currentState!.validate()) {
+      final product = Product(
+        id: widget.existingProduct?.id ?? DateTime.now().toIso8601String(),
+        name: _nameController.text.trim(),
+        description: _descriptionController.text.trim(),
+        price: double.tryParse(_priceController.text.trim()) ?? 0.0,
+        imageUrl: widget.existingProduct?.imageUrl ??
+            'https://i.imgur.com/sIagB4m.png', // Placeholder
+      );
 
-    final id = widget.existingProduct?.id ?? DateTime.now().toIso8601String();
+      if (_isEditing) {
+        await widget.updateProductUseCase.call(params: product);
+      } else {
+        await widget.createProductUseCase.call(params: product);
+      }
 
-    final newProduct = Product(
-      id: id,
-      name: _nameController.text.trim(),
-      category: _categoryController.text.trim(),
-      price: double.tryParse(_priceController.text.trim()) ?? 0.0,
-      description: _descriptionController.text.trim(),
-      // Using existing or placeholder values for non-form fields
-      imageUrl:
-          widget.existingProduct?.imageUrl ?? 'https://i.imgur.com/sIagB4m.png',
-      rating: widget.existingProduct?.rating ?? 0.0,
-      sizes: widget.existingProduct?.sizes ?? [39, 40, 41, 42, 43, 44],
-    );
-
-    widget.onSave(newProduct);
-    Navigator.of(context).popUntil((route) => route.isFirst);
-  }
-
-  void _deleteProduct() {
-    if (widget.existingProduct != null && widget.onDelete != null) {
-      widget.onDelete!(widget.existingProduct!.id);
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      if (mounted) Navigator.of(context).pop(true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.existingProduct != null;
-
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -92,20 +84,17 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(context, isEditing),
+                _buildHeader(context),
                 const SizedBox(height: 24),
                 _buildImageUploader(),
                 const SizedBox(height: 24),
-                _buildTextFormField('Name', _nameController),
-                const SizedBox(height: 16),
-                _buildTextFormField('Category', _categoryController),
-                const SizedBox(height: 16),
-                _buildTextFormField('Price', _priceController, isPrice: true),
-                const SizedBox(height: 16),
-                _buildTextFormField('Description', _descriptionController,
+                _buildTextFormField('name', _nameController),
+                _buildTextFormField('category', _categoryController),
+                _buildTextFormField('price', _priceController, isPrice: true),
+                _buildTextFormField('description', _descriptionController,
                     maxLines: 4),
                 const SizedBox(height: 32),
-                _buildFormButtons(isEditing),
+                _buildFormButtons(),
               ],
             ),
           ),
@@ -114,18 +103,15 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isEditing) {
+  Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
         IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop()),
         const SizedBox(width: 16),
-        Text(
-          isEditing ? 'Update Product' : 'Add Product',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
+        Text(_isEditing ? 'Update Product' : 'Add Product',
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -135,15 +121,13 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       height: 150,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(12),
-      ),
+          color: Colors.grey[200], borderRadius: BorderRadius.circular(12)),
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.image_outlined, size: 50, color: Colors.grey),
           SizedBox(height: 8),
-          Text('Upload Image', style: TextStyle(color: Colors.grey)),
+          Text('Upload Image', style: TextStyle(color: Colors.grey))
         ],
       ),
     );
@@ -151,34 +135,36 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
   Widget _buildTextFormField(String label, TextEditingController controller,
       {bool isPrice = false, int maxLines = 1}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          maxLines: maxLines,
-          keyboardType: isPrice
-              ? const TextInputType.numberWithOptions(decimal: true)
-              : TextInputType.text,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.grey[100],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: controller,
+            maxLines: maxLines,
+            keyboardType: isPrice
+                ? const TextInputType.numberWithOptions(decimal: true)
+                : TextInputType.text,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none),
+              suffixIcon: isPrice ? const Icon(Icons.attach_money) : null,
             ),
-            suffixIcon: isPrice ? const Icon(Icons.attach_money) : null,
+            validator: (value) =>
+                (value == null || value.trim().isEmpty) ? 'Enter $label' : null,
           ),
-          validator: (value) =>
-              (value == null || value.trim().isEmpty) ? 'Enter $label' : null,
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildFormButtons(bool isEditing) {
+  Widget _buildFormButtons() {
     return Column(
       children: [
         SizedBox(
@@ -189,25 +175,23 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               backgroundColor: Colors.indigo,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+                  borderRadius: BorderRadius.circular(12)),
             ),
-            child: Text(isEditing ? 'UPDATE' : 'ADD',
+            child: Text(_isEditing ? 'UPDATE' : 'ADD',
                 style: const TextStyle(color: Colors.white)),
           ),
         ),
-        if (isEditing) ...[
+        if (_isEditing) ...[
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: _deleteProduct,
+              onPressed: () {/* Delete logic is on the detail screen */},
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 side: const BorderSide(color: Colors.red),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                    borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text('DELETE', style: TextStyle(color: Colors.red)),
             ),

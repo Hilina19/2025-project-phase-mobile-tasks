@@ -1,13 +1,12 @@
 // lib/screens/search_screen.dart
 
 import 'package:flutter/material.dart';
-import '../models/product.dart';
+import '../domain/entities/product.dart';
+import '../domain/usecases/view_all_products.dart';
 
 class SearchScreen extends StatefulWidget {
-  static const routeName = '/search';
-  final List<Product> products;
-
-  const SearchScreen({super.key, required this.products});
+  final ViewAllProductsUseCase viewAllProductsUseCase;
+  const SearchScreen({super.key, required this.viewAllProductsUseCase});
 
   @override
   _SearchScreenState createState() => _SearchScreenState();
@@ -19,6 +18,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -29,12 +29,26 @@ class _SearchScreenState extends State<SearchScreen> {
               const SizedBox(height: 24),
               _buildSearchBar(),
               const SizedBox(height: 16),
-              // In a real app, this list would be filtered
               Expanded(
-                child: ListView.builder(
-                  itemCount: 2, // Showing 2 dummy items
-                  itemBuilder: (ctx, i) =>
-                      _ProductCard(product: widget.products[i]),
+                child: FutureBuilder<List<Product>>(
+                  future: widget.viewAllProductsUseCase
+                      .call(), // Shows all products for now
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(child: Text('No products found.'));
+                    }
+                    final products = snapshot.data!;
+                    // In a real app, this list would be filtered based on search text
+                    return ListView.builder(
+                      itemCount: products.length > 2
+                          ? 2
+                          : products.length, // Show max 2 items
+                      itemBuilder: (ctx, i) =>
+                          _ProductCard(product: products[i]),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 16),
@@ -52,14 +66,11 @@ class _SearchScreenState extends State<SearchScreen> {
     return Row(
       children: [
         IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop()),
         const SizedBox(width: 16),
-        const Text(
-          'Search Product',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
+        const Text('Search Product',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -74,13 +85,11 @@ class _SearchScreenState extends State<SearchScreen> {
               filled: true,
               fillColor: Colors.white,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
-              ),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!)),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
-              ),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!)),
               suffixIcon: const Icon(Icons.arrow_forward, color: Colors.indigo),
             ),
           ),
@@ -88,15 +97,10 @@ class _SearchScreenState extends State<SearchScreen> {
         const SizedBox(width: 16),
         Container(
           decoration: BoxDecoration(
-            color: Colors.indigo,
-            borderRadius: BorderRadius.circular(12),
-          ),
+              color: Colors.indigo, borderRadius: BorderRadius.circular(12)),
           child: IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.white),
-            onPressed: () {
-              // Toggle filter visibility logic
-            },
-          ),
+              icon: const Icon(Icons.filter_list, color: Colors.white),
+              onPressed: () {}),
         ),
       ],
     );
@@ -111,11 +115,10 @@ class _SearchScreenState extends State<SearchScreen> {
         TextField(
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.grey[100],
+            fillColor: Colors.white,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none),
           ),
         ),
         const SizedBox(height: 16),
@@ -126,15 +129,10 @@ class _SearchScreenState extends State<SearchScreen> {
           max: 1000,
           divisions: 10,
           activeColor: Colors.indigo,
-          labels: RangeLabels(
-            _currentRangeValues.start.round().toString(),
-            _currentRangeValues.end.round().toString(),
-          ),
-          onChanged: (RangeValues values) {
-            setState(() {
-              _currentRangeValues = values;
-            });
-          },
+          labels: RangeLabels(_currentRangeValues.start.round().toString(),
+              _currentRangeValues.end.round().toString()),
+          onChanged: (RangeValues values) =>
+              setState(() => _currentRangeValues = values),
         ),
       ],
     );
@@ -148,9 +146,8 @@ class _SearchScreenState extends State<SearchScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.indigo,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: const Text('APPLY', style: TextStyle(color: Colors.white)),
       ),
@@ -158,7 +155,6 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
-// Reusing the product card from home screen for consistent look
 class _ProductCard extends StatelessWidget {
   final Product product;
   const _ProductCard({required this.product});
@@ -166,9 +162,10 @@ class _ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.white,
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 20),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -176,43 +173,29 @@ class _ProductCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                product.imageUrl,
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+              child: Image.network(product.imageUrl,
+                  height: 150, width: double.infinity, fit: BoxFit.cover),
             ),
             const SizedBox(height: 12),
-            Text(
-              product.name,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            Text(product.name,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  product.category,
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                ),
-                Text(
-                  '\$${product.price.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+                Text("Men's shoe",
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                Text('\$${product.price.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
               ],
             ),
-            Row(
-              children: [
-                const Icon(Icons.star, color: Colors.amber, size: 20),
-                const SizedBox(width: 4),
-                Text(
-                  '(${product.rating.toString()})',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                ),
-              ],
-            )
+            Row(children: const [
+              Icon(Icons.star, color: Colors.amber, size: 20),
+              SizedBox(width: 4),
+              Text('(4.0)', style: TextStyle(fontSize: 14, color: Colors.grey)),
+            ])
           ],
         ),
       ),

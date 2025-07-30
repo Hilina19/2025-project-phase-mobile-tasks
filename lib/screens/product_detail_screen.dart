@@ -1,38 +1,37 @@
 // lib/screens/product_detail_screen.dart
 
 import 'package:flutter/material.dart';
-import '../models/product.dart';
+import '../domain/entities/product.dart';
+import '../domain/usecases/create_product.dart';
+import '../domain/usecases/delete_product.dart';
+import '../domain/usecases/update_product.dart';
 import 'product_form_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
-  static const routeName = '/product-detail';
-
   final Product product;
-  final void Function(String) onDelete;
+  final UpdateProductUseCase updateProductUseCase;
+  final DeleteProductUseCase deleteProductUseCase;
+  final CreateProductUseCase createProductUseCase;
 
-  const ProductDetailScreen(
-      {super.key, required this.product, required this.onDelete});
+  const ProductDetailScreen({
+    super.key,
+    required this.product,
+    required this.updateProductUseCase,
+    required this.deleteProductUseCase,
+    required this.createProductUseCase,
+  });
 
   @override
   _ProductDetailScreenState createState() => _ProductDetailScreenState();
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  late int _selectedSize;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedSize =
-        widget.product.sizes.isNotEmpty ? widget.product.sizes[2] : 0;
-  }
+  int _selectedSize = 41; // Default selected size
 
   @override
   Widget build(BuildContext context) {
-    final onSave = (ModalRoute.of(context)?.settings.arguments
-        as Map<String, dynamic>?)?['onSave'];
-
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,52 +42,39 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.product.category,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                  ),
+                  Text("Men's shoe",
+                      style: TextStyle(color: Colors.grey[600], fontSize: 16)),
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        widget.product.name,
-                        style: const TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        '\$${widget.product.price.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
+                      Text(widget.product.name,
+                          style: const TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.bold)),
+                      Text('\$${widget.product.price.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        '(${widget.product.rating.toString()})',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
+                  const Row(children: [
+                    Icon(Icons.star, color: Colors.amber, size: 20),
+                    SizedBox(width: 4),
+                    Text('(4.0)',
+                        style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  ]),
                   const SizedBox(height: 24),
-                  const Text(
-                    'Size:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
+                  const Text('Size:',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 16),
                   _buildSizeSelector(),
                   const SizedBox(height: 24),
-                  Text(
-                    widget.product.description,
-                    style: TextStyle(
-                        color: Colors.grey[700], fontSize: 14, height: 1.5),
-                  ),
+                  Text(widget.product.description,
+                      style: TextStyle(
+                          color: Colors.grey[700], fontSize: 14, height: 1.5)),
                   const SizedBox(height: 32),
-                  _buildActionButtons(context, onSave),
+                  _buildActionButtons(context),
                 ],
               ),
             ),
@@ -103,15 +89,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       children: [
         ClipRRect(
           borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(30),
-            bottomRight: Radius.circular(30),
-          ),
-          child: Image.network(
-            widget.product.imageUrl,
-            height: 300,
-            width: double.infinity,
-            fit: BoxFit.cover,
-          ),
+              bottomLeft: Radius.circular(30),
+              bottomRight: Radius.circular(30)),
+          child: Image.network(widget.product.imageUrl,
+              height: 300, width: double.infinity, fit: BoxFit.cover),
         ),
         Positioned(
           top: 40,
@@ -129,21 +110,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildSizeSelector() {
+    final sizes = [39, 40, 41, 42, 43, 44];
     return SizedBox(
       height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: widget.product.sizes.length,
+        itemCount: sizes.length,
         separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          final size = widget.product.sizes[index];
+          final size = sizes[index];
           final isSelected = _selectedSize == size;
           return GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedSize = size;
-              });
-            },
+            onTap: () => setState(() => _selectedSize = size),
             child: Container(
               width: 50,
               decoration: BoxDecoration(
@@ -152,13 +130,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 border: Border.all(color: Colors.grey[300]!),
               ),
               alignment: Alignment.center,
-              child: Text(
-                size.toString(),
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: Text(size.toString(),
+                  style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.bold)),
             ),
           );
         },
@@ -166,22 +141,40 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _buildActionButtons(
-      BuildContext context, void Function(Product)? onSave) {
+  Widget _buildActionButtons(BuildContext context) {
     return Row(
       children: [
         Expanded(
           child: OutlinedButton(
-            onPressed: () {
-              widget.onDelete(widget.product.id);
-              Navigator.of(context).pop();
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Confirm Deletion'),
+                  content: Text(
+                      'Are you sure you want to delete "${widget.product.name}"?'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel')),
+                    TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Delete')),
+                  ],
+                ),
+              );
+
+              if (confirm == true && mounted) {
+                await widget.deleteProductUseCase
+                    .call(params: widget.product.id);
+                Navigator.of(context).pop(true);
+              }
             },
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               side: const BorderSide(color: Colors.red),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('DELETE', style: TextStyle(color: Colors.red)),
           ),
@@ -189,23 +182,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
-            onPressed: () {
-              Navigator.pushNamed(
+            onPressed: () async {
+              final result = await Navigator.push(
                 context,
-                ProductFormScreen.routeName,
-                arguments: {
-                  'product': widget.product,
-                  'onSave': onSave,
-                  'onDelete': widget.onDelete,
-                },
+                MaterialPageRoute(
+                  builder: (context) => ProductFormScreen(
+                    createProductUseCase: widget.createProductUseCase,
+                    updateProductUseCase: widget.updateProductUseCase,
+                    existingProduct: widget.product,
+                  ),
+                ),
               );
+              if (result == true && mounted) {
+                Navigator.of(context).pop(true);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.indigo,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('UPDATE', style: TextStyle(color: Colors.white)),
           ),
