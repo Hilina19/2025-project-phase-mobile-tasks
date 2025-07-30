@@ -1,16 +1,30 @@
-# ecommerce_app
+# Simple E-Commerce Flutter App
 
-A new Flutter project.
+A simple but fully functional e-commerce application UI built with Flutter. This project demonstrates navigation, state management, and building a clean, modern user interface based on provided designs.
 
-## Getting Started
+## Key Features
 
-This project is a starting point for a Flutter application.
+- **View Products:** Browse a list of available products on the home screen.
+- **Product Details:** Tap on any product to see a detailed view with a description and size options.
+- **Add & Update:** Add new products or update existing ones through a dedicated form.
+- **Delete Products:** Remove products from the list.
+- **Search & Filter:** A UI for searching products and filtering by category or price.
 
-A few resources to get you started if this is your first Flutter project:
+## Screenshots
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Here are the main screens of the application:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+| Home Screen | Product Detail |
+| :---: | :---: |
+| ![Home Screen](./docs/images/photo_2025-07-30_15-49-24.jpg) | ![Product Detail Screen](./docs/images/photo_2025-07-30_15-49-17.jpg) |
+
+| Add/Update Page | Search Page |
+| :---: | :---: |
+| ![Add/Update Screen](./docs/images/photo_2025-07-30_15-48-50.jpg) | ![Search Screen](./docs/images/photo_2025-07-30_15-49-30.jpg) |
+
+## How To Run
+
+1. Clone the repository.
+2. Ensure you have the Flutter SDK installed.
+3. Run `flutter pub get` to install dependencies.
+4. Run `flutter run` to start the application.
