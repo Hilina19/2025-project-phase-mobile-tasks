@@ -1,10 +1,6 @@
-// lib/domain/repositories/product_repository.dart
-
 import '../entities/product.dart';
 
-// This is an abstract class (an interface) that defines the contract
-// for data operations related to products. The domain layer depends on this,
-// not on a concrete implementation.
+// This is the contract that the Data layer must follow.
 abstract class ProductRepository {
   Future<List<Product>> getAllProducts();
   Future<Product> getProduct(String id);

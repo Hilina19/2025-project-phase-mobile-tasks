@@ -1,20 +1,30 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
 
-import 'data/repositories/product_repository_impl.dart';
-import 'domain/repositories/product_repository.dart';
-import 'domain/usecases/create_product.dart';
-import 'domain/usecases/delete_product.dart';
-import 'domain/usecases/update_product.dart';
-import 'domain/usecases/view_all_products.dart';
-import 'domain/usecases/view_product.dart';
-import 'screens/home_screen.dart';
+import 'features/product/data/datasources/product_remote_data_source.dart';
+import 'features/product/data/datasources/product_remote_data_source_impl.dart';
+import 'features/product/data/repositories/product_repository_impl.dart';
+import 'features/product/domain/repositories/product_repository.dart';
+import 'features/product/domain/usecases/create_product.dart';
+import 'features/product/domain/usecases/delete_product.dart';
+import 'features/product/domain/usecases/update_product.dart';
+import 'features/product/domain/usecases/view_all_products.dart';
+import 'features/product/domain/usecases/view_product.dart';
+import 'features/product/presentation/screens/home_screen.dart';
 
 void main() {
   // ===== DEPENDENCY INJECTION =====
-  final ProductRepository productRepository = ProductRepositoryImpl();
+  // In a real app, this would be handled by a service locator like GetIt.
 
+  // Data Layer Dependencies
+  final ProductRemoteDataSource productRemoteDataSource =
+      ProductRemoteDataSourceImpl();
+
+  final ProductRepository productRepository = ProductRepositoryImpl(
+    remoteDataSource: productRemoteDataSource,
+    // We will add localDataSource and networkInfo in future tasks
+  );
+
+  // Domain Layer (Use Cases)
   final ViewAllProductsUseCase viewAllProductsUseCase =
       ViewAllProductsUseCase(productRepository);
   final ViewProductUseCase viewProductUseCase =
@@ -59,7 +69,7 @@ class MyApp extends StatelessWidget {
       title: 'eCommerce App',
       theme: ThemeData(
         primarySwatch: Colors.indigo,
-        scaffoldBackgroundColor: Colors.grey[50], // Light grey background
+        scaffoldBackgroundColor: Colors.grey[50],
         fontFamily: 'Poppins',
       ),
       debugShowCheckedModeBanner: false,

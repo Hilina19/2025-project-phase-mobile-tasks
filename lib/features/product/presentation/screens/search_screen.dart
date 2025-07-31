@@ -1,9 +1,9 @@
-// lib/screens/search_screen.dart
-
 import 'package:flutter/material.dart';
-import '../domain/entities/product.dart';
-import '../domain/usecases/view_all_products.dart';
+import '../../domain/entities/product.dart';
+import '../../domain/usecases/view_all_products.dart';
 
+// (The code for the SearchScreen widget is exactly the same, only imports change)
+// ... paste your original SearchScreen widget code here ...
 class SearchScreen extends StatefulWidget {
   final ViewAllProductsUseCase viewAllProductsUseCase;
   const SearchScreen({super.key, required this.viewAllProductsUseCase});
@@ -40,11 +40,8 @@ class _SearchScreenState extends State<SearchScreen> {
                       return const Center(child: Text('No products found.'));
                     }
                     final products = snapshot.data!;
-                    // In a real app, this list would be filtered based on search text
                     return ListView.builder(
-                      itemCount: products.length > 2
-                          ? 2
-                          : products.length, // Show max 2 items
+                      itemCount: products.length > 2 ? 2 : products.length,
                       itemBuilder: (ctx, i) =>
                           _ProductCard(product: products[i]),
                     );
@@ -62,6 +59,7 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+  // All the private _build... and _ProductCard widgets remain the same
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
@@ -191,7 +189,7 @@ class _ProductCard extends StatelessWidget {
                         fontSize: 18, fontWeight: FontWeight.bold)),
               ],
             ),
-            Row(children: const [
+            const Row(children: [
               Icon(Icons.star, color: Colors.amber, size: 20),
               SizedBox(width: 4),
               Text('(4.0)', style: TextStyle(fontSize: 14, color: Colors.grey)),

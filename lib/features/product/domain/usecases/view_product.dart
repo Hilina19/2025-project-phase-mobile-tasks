@@ -1,8 +1,6 @@
-// lib/domain/usecases/view_product.dart
-
+import '../../../../core/usecases/base_usecase.dart';
 import '../entities/product.dart';
 import '../repositories/product_repository.dart';
-import 'base_usecase.dart';
 
 class ViewProductUseCase implements UseCase<Product, String> {
   final ProductRepository repository;
@@ -11,7 +9,6 @@ class ViewProductUseCase implements UseCase<Product, String> {
 
   @override
   Future<Product> call({String? params}) async {
-    // A real app would have better error handling for a null id.
     return await repository.getProduct(params!);
   }
 }

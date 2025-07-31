@@ -1,10 +1,10 @@
-// lib/screens/product_form_screen.dart
-
 import 'package:flutter/material.dart';
-import '../domain/entities/product.dart';
-import '../domain/usecases/create_product.dart';
-import '../domain/usecases/update_product.dart';
+import '../../domain/entities/product.dart';
+import '../../domain/usecases/create_product.dart';
+import '../../domain/usecases/update_product.dart';
 
+// (The code for the ProductFormScreen widget is exactly the same, only imports change)
+// ... paste your original ProductFormScreen widget code here ...
 class ProductFormScreen extends StatefulWidget {
   final CreateProductUseCase createProductUseCase;
   final UpdateProductUseCase updateProductUseCase;

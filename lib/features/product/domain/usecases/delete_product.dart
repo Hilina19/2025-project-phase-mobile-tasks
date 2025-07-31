@@ -1,7 +1,5 @@
-// lib/domain/usecases/delete_product.dart
-
+import '../../../../core/usecases/base_usecase.dart';
 import '../repositories/product_repository.dart';
-import 'base_usecase.dart';
 
 class DeleteProductUseCase implements UseCase<void, String> {
   final ProductRepository repository;

@@ -1,8 +1,6 @@
-// lib/domain/usecases/view_all_products.dart
-
+import '../../../../core/usecases/base_usecase.dart';
 import '../entities/product.dart';
 import '../repositories/product_repository.dart';
-import 'base_usecase.dart';
 
 class ViewAllProductsUseCase implements UseCase<List<Product>, NoParams> {
   final ProductRepository repository;

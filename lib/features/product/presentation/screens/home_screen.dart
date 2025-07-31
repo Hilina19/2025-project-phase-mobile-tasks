@@ -1,17 +1,18 @@
-// lib/screens/home_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../domain/entities/product.dart';
-import '../domain/usecases/view_all_products.dart';
-import '../domain/usecases/view_product.dart';
-import '../domain/usecases/create_product.dart';
-import '../domain/usecases/update_product.dart';
-import '../domain/usecases/delete_product.dart';
+import '../../domain/entities/product.dart';
+import '../../domain/usecases/create_product.dart';
+import '../../domain/usecases/delete_product.dart';
+import '../../domain/usecases/update_product.dart';
+import '../../domain/usecases/view_all_products.dart';
+import '../../domain/usecases/view_product.dart';
 import 'product_detail_screen.dart';
 import 'product_form_screen.dart';
 import 'search_screen.dart';
 
+// (The code for the HomeScreen widget is exactly the same, only imports change)
+// ... paste your original HomeScreen widget code here ...
+// All the `_CustomAppBar` and `_ProductCard` widgets remain the same as before
 class HomeScreen extends StatefulWidget {
   final ViewAllProductsUseCase viewAllProductsUseCase;
   final ViewProductUseCase viewProductUseCase;
@@ -47,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // This function handles navigation and refreshes the list upon return.
   void _navigateAndRefresh(BuildContext context, Widget screen) async {
     final result = await Navigator.push(
       context,
@@ -130,8 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-// --- UI Widgets remain the same ---
 
 class _CustomAppBar extends StatelessWidget {
   final VoidCallback onSearchTap;

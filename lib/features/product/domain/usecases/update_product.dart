@@ -1,8 +1,6 @@
-// lib/domain/usecases/update_product.dart
-
+import '../../../../core/usecases/base_usecase.dart';
 import '../entities/product.dart';
 import '../repositories/product_repository.dart';
-import 'base_usecase.dart';
 
 class UpdateProductUseCase implements UseCase<void, Product> {
   final ProductRepository repository;

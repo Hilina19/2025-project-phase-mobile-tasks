@@ -1,12 +1,12 @@
-// lib/screens/product_detail_screen.dart
-
 import 'package:flutter/material.dart';
-import '../domain/entities/product.dart';
-import '../domain/usecases/create_product.dart';
-import '../domain/usecases/delete_product.dart';
-import '../domain/usecases/update_product.dart';
+import '../../domain/entities/product.dart';
+import '../../domain/usecases/create_product.dart';
+import '../../domain/usecases/delete_product.dart';
+import '../../domain/usecases/update_product.dart';
 import 'product_form_screen.dart';
 
+// (The code for the ProductDetailScreen widget is exactly the same, only imports change)
+// ... paste your original ProductDetailScreen widget code here ...
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
   final UpdateProductUseCase updateProductUseCase;
@@ -26,7 +26,7 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  int _selectedSize = 41; // Default selected size
+  int _selectedSize = 41;
 
   @override
   Widget build(BuildContext context) {
