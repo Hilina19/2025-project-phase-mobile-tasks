@@ -1,71 +1,77 @@
 import 'package:flutter/material.dart';
 
-import 'screens/home_screen.dart';
-import 'screens/product_detail_screen.dart';
-import 'screens/product_form_screen.dart';
-import 'models/product.dart';
+import 'features/product/data/repositories/product_repository_impl.dart';
+import 'features/product/domain/repositories/product_repository.dart';
+import 'features/product/domain/usecases/create_product.dart';
+import 'features/product/domain/usecases/delete_product.dart';
+import 'features/product/domain/usecases/update_product.dart';
+import 'features/product/domain/usecases/view_all_products.dart';
+import 'features/product/domain/usecases/view_product.dart';
+import 'features/product/presentation/screens/home_screen.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  // ===== DEPENDENCY INJECTION =====
+  // In a real app, this would be handled by a service locator like GetIt or a DI package.
 
-class MyApp extends StatefulWidget {
-  @override
-  State<MyApp> createState() => _MyAppState();
+  // Data Layer
+  final ProductRepository productRepository = ProductRepositoryImpl();
+
+  // Domain Layer (Use Cases)
+  final ViewAllProductsUseCase viewAllProductsUseCase =
+      ViewAllProductsUseCase(productRepository);
+  final ViewProductUseCase viewProductUseCase =
+      ViewProductUseCase(productRepository);
+  final CreateProductUseCase createProductUseCase =
+      CreateProductUseCase(productRepository);
+  final UpdateProductUseCase updateProductUseCase =
+      UpdateProductUseCase(productRepository);
+  final DeleteProductUseCase deleteProductUseCase =
+      DeleteProductUseCase(productRepository);
+
+  runApp(
+    MyApp(
+      viewAllProductsUseCase: viewAllProductsUseCase,
+      viewProductUseCase: viewProductUseCase,
+      createProductUseCase: createProductUseCase,
+      updateProductUseCase: updateProductUseCase,
+      deleteProductUseCase: deleteProductUseCase,
+    ),
+  );
 }
 
-class _MyAppState extends State<MyApp> {
-  List<Product> _products = [];
+class MyApp extends StatelessWidget {
+  final ViewAllProductsUseCase viewAllProductsUseCase;
+  final ViewProductUseCase viewProductUseCase;
+  final CreateProductUseCase createProductUseCase;
+  final UpdateProductUseCase updateProductUseCase;
+  final DeleteProductUseCase deleteProductUseCase;
 
-  void _addOrUpdateProduct(Product product) {
-    final index = _products.indexWhere((p) => p.id == product.id);
-    setState(() {
-      if (index >= 0) {
-        _products[index] = product;
-      } else {
-        _products.add(product);
-      }
-    });
-  }
-
-  void _deleteProduct(String id) {
-    setState(() {
-      _products.removeWhere((p) => p.id == id);
-    });
-  }
+  const MyApp({
+    super.key,
+    required this.viewAllProductsUseCase,
+    required this.viewProductUseCase,
+    required this.createProductUseCase,
+    required this.updateProductUseCase,
+    required this.deleteProductUseCase,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Simple Ecommerce',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      routes: {
-        '/': (ctx) => HomeScreen(
-              products: _products,
-              onDelete: _deleteProduct,
-            ),
-        ProductFormScreen.routeName: (ctx) =>
-            ProductFormScreen(onSave: _addOrUpdateProduct),
-        ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
-      },
-      onGenerateRoute: (settings) {
-        if (settings.name == ProductFormScreen.routeName) {
-          final product = settings.arguments as Product?;
-          return MaterialPageRoute(
-            builder: (ctx) => ProductFormScreen(
-              onSave: _addOrUpdateProduct,
-              existingProduct: product,
-            ),
-            settings: settings,
-          );
-        }
-        if (settings.name == ProductDetailScreen.routeName) {
-          final product = settings.arguments as Product;
-          return MaterialPageRoute(
-            builder: (ctx) => ProductDetailScreen(product: product),
-            settings: settings,
-          );
-        }
-        return null;
-      },
+      title: 'eCommerce App',
+      theme: ThemeData(
+        primarySwatch: Colors.indigo,
+        scaffoldBackgroundColor: Colors.grey[50],
+        fontFamily: 'Poppins',
+      ),
+      debugShowCheckedModeBanner: false,
+      home: HomeScreen(
+        viewAllProductsUseCase: viewAllProductsUseCase,
+        viewProductUseCase: viewProductUseCase,
+        createProductUseCase: createProductUseCase,
+        updateProductUseCase: updateProductUseCase,
+        deleteProductUseCase: deleteProductUseCase,
+      ),
     );
   }
 }
