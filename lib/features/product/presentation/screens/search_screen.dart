@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/usecases/view_all_products.dart';
+import '../widgets/product_card.dart'; // <-- IMPORT THE REUSABLE WIDGET
 
-// (The code for the SearchScreen widget is exactly the same, only imports change)
-// ... paste your original SearchScreen widget code here ...
 class SearchScreen extends StatefulWidget {
   final ViewAllProductsUseCase viewAllProductsUseCase;
   const SearchScreen({super.key, required this.viewAllProductsUseCase});
@@ -36,14 +35,19 @@ class _SearchScreenState extends State<SearchScreen> {
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      // Simple error handling for search screen
+                      return const Center(
+                          child: Text('Could not load products.'));
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const Center(child: Text('No products found.'));
                     }
                     final products = snapshot.data!;
                     return ListView.builder(
                       itemCount: products.length > 2 ? 2 : products.length,
+                      // USE THE REUSABLE WIDGET
                       itemBuilder: (ctx, i) =>
-                          _ProductCard(product: products[i]),
+                          ProductCard(product: products[i]),
                     );
                   },
                 ),
@@ -59,7 +63,7 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  // All the private _build... and _ProductCard widgets remain the same
+  // All the private _build... widgets can remain here as they are unique to this screen.
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
@@ -153,50 +157,4 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
-class _ProductCard extends StatelessWidget {
-  final Product product;
-  const _ProductCard({required this.product});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 20),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(product.imageUrl,
-                  height: 150, width: double.infinity, fit: BoxFit.cover),
-            ),
-            const SizedBox(height: 12),
-            Text(product.name,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Men's shoe",
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-                Text('\$${product.price.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            const Row(children: [
-              Icon(Icons.star, color: Colors.amber, size: 20),
-              SizedBox(width: 4),
-              Text('(4.0)', style: TextStyle(fontSize: 14, color: Colors.grey)),
-            ])
-          ],
-        ),
-      ),
-    );
-  }
-}
+// THE OLD _ProductCard CLASS IS DELETED FROM THIS FILE

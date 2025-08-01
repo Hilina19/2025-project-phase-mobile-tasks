@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 // Import for SharedPreferences and InternetConnectionChecker
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http; // <-- ADD THIS IMPORT
+import 'package:http/http.dart' as http;
 
 // Core imports
+import 'core/api/api_client.dart'; // <-- Import the new client
 import 'core/network/network_info.dart';
 import 'core/network/network_info_impl.dart';
 
@@ -34,10 +35,15 @@ void main() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   final networkInfo = NetworkInfoImpl(InternetConnectionChecker());
 
+  // Create the ApiClient first, as it's a dependency for the data source
+  final apiClient =
+      ApiClient(client: http.Client()); // <-- Create the ApiClient
+
   // Data Layer Dependencies
+  // Now, provide the ApiClient to the remote data source
   final ProductRemoteDataSource productRemoteDataSource =
-      ProductRemoteDataSourceImpl(
-          client: http.Client()); // <-- UPDATE THIS LINE
+      ProductRemoteDataSourceImpl(apiClient: apiClient); // <-- UPDATE THIS LINE
+
   final ProductLocalDataSource productLocalDataSource =
       ProductLocalDataSourceImpl(sharedPreferences: sharedPreferences);
 
@@ -47,7 +53,7 @@ void main() async {
     networkInfo: networkInfo,
   );
 
-  // Domain Layer (Use Cases)
+  // Domain Layer (Use Cases) - These remain unchanged
   final ViewAllProductsUseCase viewAllProductsUseCase =
       ViewAllProductsUseCase(productRepository);
   final ViewProductUseCase viewProductUseCase =
