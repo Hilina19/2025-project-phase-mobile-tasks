@@ -12,77 +12,77 @@ class ProductManager {
   List<Product> products = [];
 
   void addProduct() {
-    print("enter product name , description , price");
+    print('enter product name , description , price');
     String? name = stdin.readLineSync();
     String? description = stdin.readLineSync();
     double? price = double.tryParse(stdin.readLineSync()!);
 
     if (name != null && description != null && price != null) {
       products.add(Product(name, description, price));
-      print("product added");
+      print('product added');
     } else {
-      print(" invalid input");
+      print(' invalid input');
     }
   }
 
   void viewAllProducts() {
     if (products.isEmpty) {
-      print(" no product yet");
+      print(' no product yet');
     } else {
       for (int i = 0; i < products.length; i++) {
         print(
-            "$i: ${products[i].name}, ${products[i].description}, \$${products[i].price}");
+            '$i: ${products[i].name}, ${products[i].description}, \$${products[i].price}');
       }
     }
   }
 
   void viewProduct() {
-    print("enter index");
+    print('enter index');
     int? index = int.tryParse(stdin.readLineSync()!);
     if (index != null && index >= 0 && index < products.length) {
       Product p = products[index];
-      print("${p.name}, ${p.description}, ${p.price}");
+      print('${p.name}, ${p.description}, ${p.price}');
     } else {
-      print("no product found");
+      print('no product found');
     }
   }
 
   void editProduct() {
-    print("Enter index to edit:");
+    print('Enter index to edit:');
     int? index = int.tryParse(stdin.readLineSync()!);
 
     if (index != null && index >= 0 && index < products.length) {
-      print("Enter new name:");
+      print('Enter new name:');
       String? name = stdin.readLineSync();
 
-      print("Enter new description:");
+      print('Enter new description:');
       String? description = stdin.readLineSync();
 
-      print("Enter new price:");
+      print('Enter new price:');
       double? price = double.tryParse(stdin.readLineSync()!);
 
       if (name != null && description != null && price != null) {
         products[index].name = name;
         products[index].description = description;
         products[index].price = price;
-        print("Product updated.");
+        print('Product updated.');
       } else {
-        print("Invalid input.");
+        print('Invalid input.');
       }
     } else {
-      print("Product not found.");
+      print('Product not found.');
     }
   }
 
   void deleteProduct() {
-    print("enter index");
+    print('enter index');
     int? index = int.tryParse(stdin.readLineSync()!);
 
     if (index != null && index >= 0 && index < products.length) {
       products.removeAt(index);
-      print(" product removed");
+      print(' product removed');
     } else {
-      print("product not found");
+      print('product not found');
     }
   }
 }
@@ -92,12 +92,12 @@ void main() {
   bool running = true;
 
   while (running) {
-    print("1. add product");
-    print("2. view all product");
-    print("3. view product");
-    print("4. edit product");
-    print("5. delete product"); // ✅ Fixed spelling here
-    print("6. exit");
+    print('1. add product');
+    print('2. view all product');
+    print('3. view product');
+    print('4. edit product');
+    print('5. delete product'); // ✅ Fixed spelling here
+    print('6. exit');
 
     String? choice = stdin.readLineSync();
 
@@ -121,7 +121,7 @@ void main() {
         running = false;
         break;
       default:
-        print("Invalid choice");
+        print('Invalid choice');
         break;
     }
   }

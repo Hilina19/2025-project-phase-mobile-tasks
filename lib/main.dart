@@ -1,5 +1,16 @@
 import 'package:flutter/material.dart';
 
+// Import for SharedPreferences and InternetConnectionChecker
+import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// Core imports
+import 'core/network/network_info.dart';
+import 'core/network/network_info_impl.dart';
+
+// Feature-specific imports
+import 'features/product/data/datasources/product_local_data_source.dart';
+import 'features/product/data/datasources/product_local_data_source_impl.dart';
 import 'features/product/data/datasources/product_remote_data_source.dart';
 import 'features/product/data/datasources/product_remote_data_source_impl.dart';
 import 'features/product/data/repositories/product_repository_impl.dart';
@@ -11,17 +22,27 @@ import 'features/product/domain/usecases/view_all_products.dart';
 import 'features/product/domain/usecases/view_product.dart';
 import 'features/product/presentation/screens/home_screen.dart';
 
-void main() {
+void main() async {
+  // This line IS needed. It ensures that plugin services are
+  // initialized before the app is run.
+  WidgetsFlutterBinding.ensureInitialized();
+
   // ===== DEPENDENCY INJECTION =====
-  // In a real app, this would be handled by a service locator like GetIt.
+
+  // Core Dependencies
+  final sharedPreferences = await SharedPreferences.getInstance();
+  final networkInfo = NetworkInfoImpl(InternetConnectionChecker());
 
   // Data Layer Dependencies
   final ProductRemoteDataSource productRemoteDataSource =
       ProductRemoteDataSourceImpl();
+  final ProductLocalDataSource productLocalDataSource =
+      ProductLocalDataSourceImpl(sharedPreferences: sharedPreferences);
 
   final ProductRepository productRepository = ProductRepositoryImpl(
     remoteDataSource: productRemoteDataSource,
-    // We will add localDataSource and networkInfo in future tasks
+    localDataSource: productLocalDataSource,
+    networkInfo: networkInfo,
   );
 
   // Domain Layer (Use Cases)

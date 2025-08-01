@@ -1,6 +1,6 @@
 name: ecommerce_app
 description: A simple Flutter e‑commerce demo with navigation and routing.
-publish_to: none
+publish_to: 'none'
 
 version: 1.0.0+1
 
@@ -10,20 +10,25 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
   cupertino_icons: ^1.0.8
   uuid: ^4.3.3
-  intl: ^0.19.0 # <-- ADDED for date formatting in the Home Screen
+  intl: ^0.19.0
+  internet_connection_checker: ^1.0.0+1
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^3.0.0
+
+  # Use these specific, stable versions
+  mockito: 5.4.5
+  build_runner: 2.4.6
 
 flutter:
   uses-material-design: true
-
-  # ADD THE FOLLOWING FONT DECLARATION
+  assets:
+    - assets/fonts/
   fonts:
     - family: Poppins
       fonts:
@@ -32,3 +37,7 @@ flutter:
           weight: 700
         - asset: assets/fonts/Poppins-SemiBold.ttf
           weight: 600
+
+# This override is our final, unbreakable rule for the analyzer.
+dependency_overrides:
+  analyzer: '6.2.0'
