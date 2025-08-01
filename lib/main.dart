@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 // Import for SharedPreferences and InternetConnectionChecker
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http; // <-- ADD THIS IMPORT
 
 // Core imports
 import 'core/network/network_info.dart';
@@ -35,7 +36,8 @@ void main() async {
 
   // Data Layer Dependencies
   final ProductRemoteDataSource productRemoteDataSource =
-      ProductRemoteDataSourceImpl();
+      ProductRemoteDataSourceImpl(
+          client: http.Client()); // <-- UPDATE THIS LINE
   final ProductLocalDataSource productLocalDataSource =
       ProductLocalDataSourceImpl(sharedPreferences: sharedPreferences);
 
